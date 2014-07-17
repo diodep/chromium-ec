@@ -58,6 +58,7 @@ static const char * const channel_names[] = {
 	"thermal",
 	"usb",
 	"usbms",
+	"usbftdi",
 	"usbcharge",
 	"usbpd",
 	"vboot",

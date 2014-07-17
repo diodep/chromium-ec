@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "util.h"
 #include "usb.h"
+#include "usb_ftdi.h"
 
 /* Console output macro */
 #define CPRINTF(format, args...) cprintf(CC_USB, format, ## args)
@@ -30,7 +31,11 @@ static const struct usb_device_descriptor dev_desc = {
 	.bMaxPacketSize0 = USB_MAX_PACKET_SIZE,
 	.idVendor = USB_VID_GOOGLE,
 	.idProduct = CONFIG_USB_PID,
+#ifdef CONFIG_USB_FTDI
+	.bcdDevice = 0x0900, /* FT232H */
+#else
 	.bcdDevice = 0x0200, /* 2.00 */
+#endif
 	.iManufacturer = USB_STR_VENDOR,
 	.iProduct = USB_STR_PRODUCT,
 	.iSerialNumber = USB_STR_VERSION,
@@ -76,6 +81,15 @@ static void ep0_rx(void)
 			usb_iface_request[iface](ep0_buf_rx, ep0_buf_tx);
 		return;
 	}
+
+#ifdef CONFIG_USB_FTDI
+	/* vendor specific requests */
+	if ((req & USB_TYPE_MASK) == USB_TYPE_VENDOR) {
+		/* ugly hack, TODO fix */
+		ftdi_iface_request(ep0_buf_rx, ep0_buf_tx);
+		return;
+	}
+#endif
 
 	/* TODO check setup bit ? */
 	if (req == (USB_DIR_IN | (USB_REQ_GET_DESCRIPTOR << 8))) {
